@@ -17,17 +17,20 @@ Press 1 of 4 myTemp buttons using CMDs:
 5. Send CMDs from Python
 */
 
+#define COMMAND_TIMEOUT 1000
+
 // CMDs   (SI, SD, SH, SE)
-const char INCREASE[2] = {0x53, 0x49};
-const char DECREASE[2] = {0x53, 0x44};
-const char SHIFT[2] = {0x53, 0x48};
-const char SET[2] = {0x53, 0x45};
+#define COMMAND_HEADER 0x53
+#define COMMAND_INCREASE 0x49
+#define COMMAND_DECREASE 0x44
+#define COMMAND_SHIFT 0x48
+#define COMMAND_SET 0x45
 
 // SET PINS
-int incPin = 2;
-int decPin = 3;
-int shiftPin = 4;
-int setPin = 5;
+#define incPin 2
+#define decPin 3
+#define shiftPin 4
+#define setPin 5
 
 // INTIALIZE
 void setup()
@@ -55,7 +58,7 @@ void pinsOff()
 }
 
 // SIMULATE PRESSED BUTTON
-void pressButton(int pin)
+void pressButton(uint8_t pin)
 {
   delay(100);
   digitalWrite(pin, LOW);
@@ -64,65 +67,58 @@ void pressButton(int pin)
   delay(150);
 }
 
+uint8_t cmd[2];
+unsigned long t0;
+
 // MAIN LOOP WAITS FOR CMD
 void loop()
 {
 
   pinsOff();
-  byte cmd[2];
 
-  while (Serial.available() < 2)
-  {
-    pinsOff();
-  }
-  cmd[0] = Serial.read();
+  Serial.flush();
 
-  if (cmd[0] == 0x53)
+  while (true)
   {
-    if (Serial.available())
+    while (!Serial.available())
     {
+    }
 
+    t0 = millis();
+    while (Serial.available() < 2)
+    {
+      if (millis() - t0 > COMMAND_TIMEOUT)
+      {
+        Serial.read();
+        break;
+      }
+    }
+    if (Serial.available() >= 2)
+    {
+      cmd[0] = Serial.read();
       cmd[1] = Serial.read();
-
-      if (cmd[1] == 0x45)
-      {
-        pressButton(setPin);
-        pinsOff();
-        Serial.flush();
-      }
-      else if (cmd[1] == 0x48)
-      {
-        pressButton(shiftPin);
-        pinsOff();
-        Serial.flush();
-      }
-      else if (cmd[1] == 0x44)
-      {
-        pressButton(decPin);
-        pinsOff();
-        Serial.flush();
-      }
-      else if (cmd[1] == 0x49)
-      {
-        pressButton(incPin);
-        pinsOff();
-        Serial.flush();
-      }
-      else
-      {
-        pinsOff();
-        Serial.flush();
-      }
-    }
-    else
-    {
-      pinsOff();
-      Serial.flush();
+      break;
     }
   }
-  else
+
+  if (cmd[0] == COMMAND_HEADER)
   {
-    pinsOff();
-    Serial.flush();
+
+    if (cmd[1] == COMMAND_SET)
+    {
+      pressButton(setPin);
+    }
+    else if (cmd[1] == COMMAND_SHIFT)
+    {
+      pressButton(shiftPin);
+    }
+    else if (cmd[1] == COMMAND_DECREASE)
+    {
+      pressButton(decPin);
+    }
+    else if (cmd[1] == COMMAND_INCREASE)
+    {
+      pressButton(incPin);
+    }
   }
 }
