@@ -26,6 +26,7 @@ if connected == False:
     print("Failed to connect to {}".format(port))
     quit()
 
+time.sleep(2) # Necessary delay for Arduino Uno
 print("Running myTemp program")
 
 
@@ -33,7 +34,7 @@ print("Running myTemp program")
 ###   WRITE PROGRAM BELOW   ###
 ###############################
 
-# Examples provided
+# # Examples provided
 
 # Sets temperature to input
 myT.set_temp(25.7)

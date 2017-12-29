@@ -50,10 +50,12 @@ def mytemp_connect(list_of_ports):
     return connected, myT
 
 class MyTempControl():
+    GET_ID = b'\x53\x54'
     SET = b'\x53\x45'
     SHIFT =  b'\x53\x48'
     DECREASE =  b'\x53\x44'
     INCREASE =  b'\x53\x49'
+    ID = b'\x4D\x59\x54'
 
     def __init__(self, com, baudrate=9600):
         self._com_port = com
@@ -65,6 +67,25 @@ class MyTempControl():
         except:
             print('Serial Connection could not be established for: ' +
                   com + ' at ' + str(baudrate))
+
+
+    # Check ID of myTemp, returns boolean
+    def is_mytemp(self):
+        self._ser.flush()
+        self._ser.write(self.GET_ID)
+        t0 = time.time()
+        while self._ser.in_waiting < 3:
+            if time.time() - t0 > 3:
+                self._ser.flush()
+                return False
+        readID = self._ser.read(3)
+        if readID == self.ID:
+            self._ser.flush()
+            return True
+        else:
+            self._ser.flush()
+            return False
+
 
     # Press Set and number of presses
     def press_set(self,num=1):
@@ -209,7 +230,7 @@ class MyTempControl():
         tens = divmod(num,10)[0]
         dig = divmod(num,10)[1]
    
-`       # Change setting
+        # Change setting
         if temp == True:
             self.press_set()
         else:
