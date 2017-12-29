@@ -25,6 +25,9 @@ Press 1 of 4 myTemp buttons using CMDs:
 #define COMMAND_DECREASE 0x44
 #define COMMAND_SHIFT 0x48
 #define COMMAND_SET 0x45
+#define COMMAND_GET_ID 0x54
+
+byte MYTEMP_ID[3] = {0x4D,0x59,0x54};
 
 // SET PINS
 #define incPin 2
@@ -35,14 +38,13 @@ Press 1 of 4 myTemp buttons using CMDs:
 // INTIALIZE
 void setup()
 {
-
   // Set relay pins as digital logic outputs
   pinMode(incPin, OUTPUT);
   pinMode(decPin, OUTPUT);
   pinMode(shiftPin, OUTPUT);
   pinMode(setPin, OUTPUT);
 
-  // Turn off all pins - START WITH SET - HIGH IS OFF
+  // Turn off all pins  HIGH IS OFF
   pinsOff();
 
   Serial.begin(9600);
@@ -103,7 +105,12 @@ void loop()
 
   if (cmd[0] == COMMAND_HEADER)
   {
-
+    if (cmd[1] == COMMAND_GET_ID)
+    {
+      Serial.flush();
+      delay(100);
+      Serial.write(MYTEMP_ID,3);
+    }
     if (cmd[1] == COMMAND_SET)
     {
       pressButton(setPin);
